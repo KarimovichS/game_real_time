@@ -24,6 +24,7 @@ ws_pattern = [
 ]
 application = ProtocolTypeRouter(
     {
+        'http': application,
         'websocket': AuthMiddlewareStack(URLRouter(
             ws_pattern
         ))
