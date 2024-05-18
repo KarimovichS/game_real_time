@@ -5,14 +5,10 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-
     <title>Play | {{room_code}}</title>
-
-
 </head>
 
 <style>
@@ -274,9 +270,7 @@
 </style>
 
 <body class="bg-dark">
-
     <div class="full-page" id="full-page">
-
         <div class="game flex-column">
             <div class="scoreboard">
                 <div class="player1">Player 1: 0</div>
@@ -293,151 +287,126 @@
                     <div data-cell-index="6" class="space"></div>
                     <div data-cell-index="7" class="space"></div>
                     <div data-cell-index="8" class="space"></div>
-
                 </div>
             </div>
         </div>
     </div>
 
-
-
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
-
-
     <script>
-
         var room_code = '{{room_code}}'
         var username = '{{username}}'
         var player = username.charAt(0)
 
-        let socket = new WebSocket('ws://localhost:8000/ws/game/' +room_code)
+        let socket = new WebSocket('ws://localhost:8000/ws/game/' + room_code)
 
-        let gameState = ["","","","","","","","",""]
+        let gameState = ["", "", "", "", "", "", "", "", ""]
 
         let elementArray = document.querySelectorAll('.space')
 
-        elementArray.forEach(function(elem){
-            elem.addEventListener("click" , function (event){
-                setText(event.path[0].getAttribute('data-cell-index') , player)
+        elementArray.forEach(function (elem) {
+            elem.addEventListener("click", function (event) {
+                setText(event.target.getAttribute('data-cell-index'), player)
             })
         })
 
-
-        function checkGameEnd(){
+        function checkGameEnd() {
             var count = 0;
-            gameState.map((game)=>{
-                if(game != ""){
+            gameState.map((game) => {
+                if (game != "") {
                     count++;
                 }
             })
 
-            if(count >= 9){
-                var data = {'type' : 'over'}
-                socket.send(JSON.stringify({data}))
-                swal("Good over!" , "Game end no one won" , "warning")
+            if (count >= 9) {
+                var data = { 'type': 'over' }
+                socket.send(JSON.stringify({ data }))
+                swal("Good over!", "Game end no one won", "warning")
             }
         }
 
-        function checkWon(value , player){
+        function checkWon(value, player) {
             var won = false;
 
-            if(gameState[0] === value && gameState[1] == value && gameState[2] == value){
+            if (gameState[0] === value && gameState[1] == value && gameState[2] == value) {
                 won = true;
-            }else if(gameState[3] === value && gameState[4] == value && gameState[5] == value){
+            } else if (gameState[3] === value && gameState[4] == value && gameState[5] == value) {
                 won = true
-            }else if(gameState[6] === value && gameState[7] == value && gameState[8] == value){
-                won = true
-            }
-            else if(gameState[0] === value && gameState[3] == value && gameState[6] == value){
+            } else if (gameState[6] === value && gameState[7] == value && gameState[8] == value) {
                 won = true
             }
-            else if(gameState[1] === value && gameState[4] == value && gameState[7] == value){
-                won = true
-            }else if(gameState[2] === value && gameState[5] == value && gameState[8] == value){
+            else if (gameState[0] === value && gameState[3] == value && gameState[6] == value) {
                 won = true
             }
-            else if(gameState[0] === value && gameState[4] == value && gameState[8] == value){
+            else if (gameState[1] === value && gameState[4] == value && gameState[7] == value) {
+                won = true
+            } else if (gameState[2] === value && gameState[5] == value && gameState[8] == value) {
                 won = true
             }
-            else if(gameState[2] === value && gameState[4] == value && gameState[6] == value){
+            else if (gameState[0] === value && gameState[4] == value && gameState[8] == value) {
+                won = true
+            }
+            else if (gameState[2] === value && gameState[4] == value && gameState[6] == value) {
                 won = true
             }
 
-            if(won){
-                var data = {'type' : 'end' , 'player' : player}
-                socket.send(JSON.stringify({data}))
-                swal("Good job!" , "You won" , "success")
+            if (won) {
+                var data = { 'type': 'end', 'player': player }
+                socket.send(JSON.stringify({ data }))
+                swal("Good job!", "You won", "success")
             }
 
             checkGameEnd();
-
         }
 
-
-
-        function setText(index , value){
+        function setText(index, value) {
             var data = {
-                'player' : player,
-                'index' : index,
-                'type' : 'running'
+                'player': player,
+                'index': index,
+                'type': 'running'
             }
 
+            if (gameState[parseInt(index)] == "") {
+                gameState[parseInt(index)] = value
+                elementArray[parseInt(index)].innerHTML = value
 
-
-            if(gameState[parseInt(index)] == ""){
-            gameState[parseInt(index)] = value
-            elementArray[parseInt(index)].innerHTML = value
-
-            socket.send(JSON.stringify({
-                data
-            }))
-            checkWon(value , player )
-            }else{
+                socket.send(JSON.stringify({ data }))
+                checkWon(value, player)
+            } else {
                 alert("You cannot fill this space")
             }
         }
 
-
-        function setAnotherUserText(index , value){
+        function setAnotherUserText(index, value) {
             gameState[parseInt(index)] = value
             elementArray[parseInt(index)].innerHTML = value
         }
 
-
-
-        socket.onopen = function (e){
+        socket.onopen = function (e) {
             console.log('Socket connected')
         }
 
-        socket.onmessage = function (e){
+        socket.onmessage = function (e) {
             var data = JSON.parse(e.data)
             console.log(data)
-            if(data.payload.type == 'end' && data.payload.player !== player){
-                swal("Sorry!" , "You lost" , "error")
-            }else if(data.payload.type == 'over'){
-                swal("Game over!" , "Game end no one won" , "warning")
-                return;
-            }else if(data.payload.type == 'running' &&  data.payload.player !== player){
-                setAnotherUserText(data.payload.index , data.payload.player)
+            if (data.payload.type == 'end' && data.payload.player !== player) {
+                swal("Sorry!", "You lost", "error")
+            } else if (data.payload.type == 'over') {
+                swal("Good over!", "Game end no one won", "warning")
+            } else if (data.payload.type == 'running') {
+                setAnotherUserText(data.payload.index, data.payload.player)
             }
-
-
-
         }
 
-        socket.onclose = function (e){
-            console.log('Socket closed')
+        socket.onerror = function (e) {
+            console.log('Something went wrong', e)
         }
 
-
-
+        socket.onclose = function (e) {
+            console.log('Socket closed', e)
+        }
     </script>
-
-
-
-
-
 </body>
 
 </html>
